@@ -6,16 +6,23 @@ import { useState, useRef } from 'react';
 
 import io from 'socket.io-client'
 
+
+
+
 const MainPage = () => {
 
-  const socket = io();
-  
+  const socket = io('http://localhost:4000');
   let [inputSources, setInputSources] = useState([]);
-  let [selectedSource, setSelectedSource] = useState({name: "", id: ""});
-  let [videoStream, setVideoStream] = useState({});
+  let [selectedSource, setSelectedSource] = useState({ name: "", id: "" });
 
   let videoRef = useRef(null);
-  
+  const rtcPeerConnection = useRef(new RTCPeerConnection({
+    'iceServers': [
+        { 'urls': 'stun:stun.services.mozilla.com' },
+        { 'urls': 'stun:stun.l.google.com:19302' },
+    ]
+  }))
+
   // Load the possible video sources available on the computer. Returns screens and windows.
   let handleLoadInputSources = async () => {
     const videoInputs = await window.init.getInputSources();
@@ -35,34 +42,83 @@ const MainPage = () => {
 
   // Gets the video stream from the selected video source
   let getVideoStream = async (source) => {
-    const constraints = {
-      audio: false,
-      video: {
-        mandatory: {
-          chromeMediaSource: 'desktop',
-          chromeMediaSourceId: source.id,
-          minWidth: 1280,
-          maxWidth: 1280,
-          minHeight: 720,
-          maxHeight: 720,
+    try {
+      const constraints = {
+        audio: false,
+        video: {
+          mandatory: {
+            chromeMediaSource: 'desktop',
+            chromeMediaSourceId: source.id,
+            minWidth: 1280,
+            maxWidth: 1280,
+            minHeight: 720,
+            maxHeight: 720,
+          }
         }
-      }
-    };
-    // video stream start
-    const stream = await navigator.mediaDevices.getUserMedia(constraints);
-    window.init.getVideoStream(stream.getTracks()[0]);
-    console.log(stream.getTracks()[0])
-    setVideoStream(stream);
-    videoRef.current.srcObject = stream;
+      };
+      // video stream start
+      const stream = await navigator.mediaDevices.getUserMedia(constraints);
+      videoRef.current.srcObject = stream
 
-    // recording chunks
-    const options = {mimeType: 'video/webm; codecs=vp9'};
-    mediaRecorder.current = new MediaRecorder(stream, options);
-    mediaRecorder.current.ondataavailable = handleDataAvailable;
-    mediaRecorder.current.start();
+      // recording chunks
+      // const options = { mimeType: 'video/webm; codecs=vp9' };
+      // mediaRecorder.current = new MediaRecorder(stream, options);
+      // mediaRecorder.current.ondataavailable = handleDataAvailable;
+      // mediaRecorder.current.start();
+
+      rtcPeerConnection.current.addStream(stream);
+      rtcPeerConnection.current.createOffer({
+        offerToReceiveVideo: 1
+      }).then(sdp => {
+        rtcPeerConnection.current.setLocalDescription(sdp);
+        socket.emit('offer', sdp);
+
+      })
+    } catch (e) { console.log(e) }
+
+    socket.on('offer', offerSDP => {
+      rtcPeerConnection.current.setRemoteDescription(
+        new RTCSessionDescription(offerSDP)
+      ).then(() => {
+        rtcPeerConnection.current.createAnswer().then(sdp => {
+          rtcPeerConnection.current.setLocalDescription(sdp);
+          socket.emit('answer', sdp);
+        })
+      })
+    });
+
+    socket.on('answer', answerSDP => {
+      rtcPeerConnection.current.setRemoteDescription(
+        new RTCSessionDescription(answerSDP)
+      )
+    });
+
+    socket.on('icecandidate', icecandidate => {
+      rtcPeerConnection.current.addIceCandidate(
+        new RTCIceCandidate(icecandidate)
+      )
+    });
+
+    rtcPeerConnection.current.onicecandidate = (e) => {
+      if (e.candidate){
+        socket.emit('icecandidate', e.candidate)
+      }
+    }
+
+    rtcPeerConnection.current.oniceconnectionstatechange = (e) => {
+      console.log(e);
+    }
+
+    rtcPeerConnection.current.ontrack = (e) => {
+     // videoRef.current.srcObject = e.streams[0];
+      videoRef.current.onloadedmetadata = (e) => videoRef.current.play();
+    }
 
 
   }
+
+
+
 
   let handleDataAvailable = (e) => {
     console.log('video data available');
@@ -77,7 +133,7 @@ const MainPage = () => {
     console.log(mediaRecorder);
     mediaRecorder.current.stop();
   }
-  
+
   return (
     <div>
       <h2>Main</h2>
@@ -90,15 +146,15 @@ const MainPage = () => {
         </Dropdown.Toggle>
 
         <Dropdown.Menu>{
-        inputSources.map(
-          (input) => (
-            <Dropdown.Item
-              key={input.name}
-              id={`video-source-${input.name}`}
-              title={input.name}
-              eventKey={input.id}
-            >{input.name}</Dropdown.Item>))
-            }
+          inputSources.map(
+            (input) => (
+              <Dropdown.Item
+                key={input.name}
+                id={`video-source-${input.name}`}
+                title={input.name}
+                eventKey={input.id}
+              >{input.name}</Dropdown.Item>))
+        }
         </Dropdown.Menu>
       </Dropdown>
       <button id="videoSelectBtn" class="button is-text" onClick={handleLoadInputSources}>Choose a Video Source
@@ -109,7 +165,7 @@ const MainPage = () => {
         </video>
       </div>
     </div>
-    
+
   );
 };
 
