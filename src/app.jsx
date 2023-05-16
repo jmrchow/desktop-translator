@@ -4,11 +4,6 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import Dropdown from 'react-bootstrap/Dropdown';
 import { useState, useRef } from 'react';
 
-import io from 'socket.io-client'
-
-
-
-
 const MainPage = () => {
 
   const host = "http://127.0.0.1"
@@ -132,79 +127,9 @@ const MainPage = () => {
       stream = await navigator.mediaDevices.getUserMedia(constraints);
       videoRef.current.srcObject = stream
       return stream
-      // recording chunks
-      // const options = { mimeType: 'video/webm; codecs=vp9' };
-      // mediaRecorder.current = new MediaRecorder(stream, options);
-      // mediaRecorder.current.ondataavailable = handleDataAvailable;
-      // mediaRecorder.current.start();
+
 
     } catch (e) { console.log(e) }
-
-    // socket.on('offer', offerSDP => {
-    //   rtcPeerConnection.current.setRemoteDescription(
-    //     new RTCSessionDescription(offerSDP)
-    //   ).then(() => {
-    //     rtcPeerConnection.current.createAnswer().then(sdp => {
-    //       rtcPeerConnection.current.setLocalDescription(sdp);
-    //       socket.emit('answer', sdp);
-    //     })
-    //   })
-    // });
-
-    // socket.on('answer', answerSDP => {
-    //   rtcPeerConnection.current.setRemoteDescription(
-    //     new RTCSessionDescription(answerSDP)
-    //   )
-    // });
-
-    // socket.on('icecandidate', icecandidate => {
-    //   rtcPeerConnection.current.addIceCandidate(
-    //     new RTCIceCandidate(icecandidate)
-    //   )
-    // });
-
-    // rtcPeerConnection.current.onicecandidate = (e) => {
-    //   if (e.candidate){
-    //     socket.emit('icecandidate', e.candidate)
-    //   }
-    // }
-
-    // rtcPeerConnection.current.oniceconnectionstatechange = (e) => {
-    //   console.log(e);
-    // }
-
-    // rtcPeerConnection.current.ontrack = (e) => {
-    //  // videoRef.current.srcObject = e.streams[0];
-    //   videoRef.current.onloadedmetadata = (e) => videoRef.current.play();
-    // }
-
-    // socket.on('answer', answerSDP => {
-    //   rtcPeerConnection.current.setRemoteDescription(
-    //     new RTCSessionDescription(answerSDP)
-    //   )
-    // });
-
-    // socket.on('icecandidate', icecandidate => {
-    //   rtcPeerConnection.current.addIceCandidate(
-    //     new RTCIceCandidate(icecandidate)
-    //   )
-    // });
-
-    // rtcPeerConnection.current.onicecandidate = (e) => {
-    //   if (e.candidate) {
-    //     socket.emit('icecandidate', e.candidate)
-    //   }
-    // }
-
-    // rtcPeerConnection.current.oniceconnectionstatechange = (e) => {
-    //   console.log(e);
-    // }
-
-    // rtcPeerConnection.current.ontrack = (e) => {
-    //   // videoRef.current.srcObject = e.streams[0];
-    //   videoRef.current.onloadedmetadata = (e) => videoRef.current.play();
-    // }
-
 
   }
 

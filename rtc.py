@@ -59,7 +59,6 @@ async def offer(request):
     
     if args.record_to:
         recorder = MediaRecorder(args.record_to)
-        print(args.record_to)
     else:
         recorder = MediaBlackhole()
 
@@ -81,7 +80,6 @@ async def offer(request):
     @pc.on("track")
     def on_track(track):
         log_info("Track %s received", track.kind)
-        print("TRACK RECEIVEDEEEEEEEEEEEEEEEEE")
         if track.kind =="video":
             pc.addTrack(VideoTransformTrack(
                 relay.subscribe(track)
@@ -93,7 +91,6 @@ async def offer(request):
         @track.on("ended")
         async def on_ended():
             log_info("Track %s ended", track.kind)
-            print("ENDEDDDDDDDDDDDDDDDDDDDDD")
             await recorder.stop()
 
 
@@ -120,17 +117,11 @@ async def test(request):
     logger.info("Successful HTTP Message Test")
     print("hi")
 
+
+
 async def on_shutdown(app):
     #close peer connections
-    print("Shutting Down")
-    print("receivers")
-    for pc in pcs:
-        for rec in pc.getReceivers():
-            print(rec)
-    print("transceivers")
-    for pc in pcs:
-        for trans in pc.getTransceivers():
-            print(trans)
+
     coros = [pc.close() for pc in pcs]
     await asyncio.gather(*coros)
     pcs.clear()
