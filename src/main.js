@@ -8,62 +8,62 @@ const expressApp = express();
 const { createServer } = require('http');
 const { Server } = require('socket.io');
 
-expressApp.use(express.static(__dirname));
+// expressApp.use(express.static(__dirname));
 
-expressApp.get('/', function(req, res, next) {
-  console.log('req path...', req.path)
-  res.sendFile(path.join(__dirname, 'index.html'));
-});
+// expressApp.get('/', function(req, res, next) {
+//   console.log('req path...', req.path)
+//   res.sendFile(path.join(__dirname, 'index.html'));
+// });
 
-expressApp.set('port', 4001);
+// expressApp.set('port', 4001);
 
-expressApp.use(cors({ origin: '*' }));
+// expressApp.use(cors({ origin: '*' }));
 
-expressApp.use(function (req, res, next) {
-  // Website you wish to allow to connect
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  // Request methods you wish to allow
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
-  // Request headers you wish to allow
-  res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With,content-type');
-  // // Set to true if you need the website to include cookies in the requests sent
-  // // to the API (e.g. in case you use sessions)
-  res.setHeader('Access-Control-Allow-Credentials', true);
-  // Pass to next layer of middleware
-  next();
-});
+// expressApp.use(function (req, res, next) {
+//   // Website you wish to allow to connect
+//   res.setHeader('Access-Control-Allow-Origin', '*');
+//   // Request methods you wish to allow
+//   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
+//   // Request headers you wish to allow
+//   res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With,content-type');
+//   // // Set to true if you need the website to include cookies in the requests sent
+//   // // to the API (e.g. in case you use sessions)
+//   res.setHeader('Access-Control-Allow-Credentials', true);
+//   // Pass to next layer of middleware
+//   next();
+// });
 
 
 
-const httpServer = createServer(expressApp)
-httpServer.listen(4001, '0.0.0.0')
-httpServer.on('error', e => console.log('error'))
-httpServer.on('listening', () => console.log(httpServer.address()))
-const io = new Server(httpServer, {
-    origin: '*',
-});
+// const httpServer = createServer(expressApp)
+// httpServer.listen(4001, '0.0.0.0')
+// httpServer.on('error', e => console.log('error'))
+// httpServer.on('listening', () => console.log(httpServer.address()))
+// const io = new Server(httpServer, {
+//     origin: '*',
+// });
 
-const connections = io.of('/desktop-translator')
+// const connections = io.of('/desktop-translator')
 
-connections.on('connection', socket => {
-    console.log('connection established')
+// connections.on('connection', socket => {
+//     console.log('connection established')
 
-    socket.on('offer', sdp => {
-        console.log('routing offer')
-        // send to the electron app
-        socket.broadcast.emit('offer', sdp)
-    })
+//     socket.on('offer', sdp => {
+//         console.log('routing offer')
+//         // send to the electron app
+//         socket.broadcast.emit('offer', sdp)
+//     })
 
-    socket.on('answer', sdp => {
-        console.log('routing answer')
-        // send to the electron app
-        socket.broadcast.emit('answer', sdp)
-    })
+//     socket.on('answer', sdp => {
+//         console.log('routing answer')
+//         // send to the electron app
+//         socket.broadcast.emit('answer', sdp)
+//     })
 
-    socket.on('icecandidate', icecandidate => {
-        socket.broadcast.emit('icecandidate', icecandidate)
-    })
-});
+//     socket.on('icecandidate', icecandidate => {
+//         socket.broadcast.emit('icecandidate', icecandidate)
+//     })
+// });
 
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
