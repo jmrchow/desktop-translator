@@ -17,8 +17,9 @@ const MainPage = () => {
       { 'urls': 'stun:stun.l.google.com:19302' },
     ]
   }))
+  let dc = useRef(null)
 
-  
+
   // Load the possible video sources available on the computer. Returns screens and windows.
   let handleLoadInputSources = async () => {
     const videoInputs = await window.init.getInputSources();
@@ -96,10 +97,27 @@ const MainPage = () => {
     rtcPeerConnection.current.addEventListener('signalingstatechange', function () {
       console.log("Signaling State: " + rtcPeerConnection.signalingState);
     }, false);
-    stream.getTracks().forEach( track => {
+    stream.getTracks().forEach(track => {
       rtcPeerConnection.current.addTrack(track, stream);
     });
 
+    if (true) {
+      dc = rtcPeerConnection.current.createDataChannel('chat');
+      dc.onclose = function () {
+        console.log("Closed dc")
+      };
+      dc.onopen = function () {
+        console.log("Opened DC")
+        let dcInterval = setInterval(function () {
+          var message = 'ping';
+          dc.send(message);
+        }, 1000);
+      };
+      dc.onmessage = function (evt) {
+        console.log(evt.data)
+      };
+      dc.current = dc
+    }
 
   }
 
@@ -136,9 +154,9 @@ const MainPage = () => {
   let handleStop = () => {
 
     // close data channel
-    // if (dc) {
-    //     dc.close();
-    // }
+    if (dc.current) {
+        dc.current.close();
+    }
 
     // close transceivers
     if (rtcPeerConnection.current.getTransceivers) {

@@ -20,7 +20,7 @@ ROOT = os.path.dirname(__file__)
 logger = logging.getLogger("pc")
 pcs = set()
 relay = MediaRelay()
-
+data_channel = None
 
 class VideoTransformTrack(MediaStreamTrack): 
     """
@@ -32,12 +32,14 @@ class VideoTransformTrack(MediaStreamTrack):
     def __init__(self, track):
         super().__init__()  # don't forget this!
         self.track = track
+        self.channel = None
 
     async def recv(self):
         frame = await self.track.recv()
-
+        img = frame.to_ndarray(format="bgr24")
         # Do some processing/transforms/etc
-
+        if self.channel:
+            self.channel.send("hi")
         return frame
         # can also return coordinates with translation here
 
@@ -62,9 +64,14 @@ async def offer(request):
     else:
         recorder = MediaBlackhole()
 
-
     @pc.on("datachannel")
     def on_datachannel(channel):
+
+        # Warning: This depends on the video track to be established before the data channel!
+        global video_track
+        video_track.channel = channel
+
+
         @channel.on("message")
         def on_message(message):
             if isinstance(message,str) and message.startswith("ping"):
@@ -80,10 +87,12 @@ async def offer(request):
     @pc.on("track")
     def on_track(track):
         log_info("Track %s received", track.kind)
+        global video_track
         if track.kind =="video":
-            pc.addTrack(VideoTransformTrack(
+            video_track = (VideoTransformTrack(
                 relay.subscribe(track)
             ))
+            pc.addTrack(video_track)
             if args.record_to:
                 recorder.addTrack(relay.subscribe(track))
         
