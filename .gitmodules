@@ -1,0 +1,3 @@
+[submodule "tesserocr/tessdata"]
+	path = tesserocr/tessdata
+	url = https://github.com/sirfz/tesserocr.git
