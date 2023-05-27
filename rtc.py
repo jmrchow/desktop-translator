@@ -1,9 +1,7 @@
 import argparse
 import asyncio
 import logging
-import math
 import os
-import numpy
 import uuid
 import json
 
@@ -14,6 +12,8 @@ from aiortc.contrib.media import MediaRelay, MediaBlackhole, MediaRecorder, Medi
 
 from av import VideoFrame
 from threading import Timer
+
+import ocr
 
 ROOT = os.path.dirname(__file__)
 
@@ -36,10 +36,11 @@ class VideoTransformTrack(MediaStreamTrack):
 
     async def recv(self):
         frame = await self.track.recv()
-        img = frame.to_ndarray(format="bgr24")
+        img = frame.to_image()
         # Do some processing/transforms/etc
+        extractedWords = ocr.extractWords(ocr.preprocess(img))
         if self.channel:
-            self.channel.send("hi")
+            self.channel.send(json.dumps(extractedWords))
         return frame
         # can also return coordinates with translation here
 
