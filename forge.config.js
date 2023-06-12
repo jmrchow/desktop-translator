@@ -43,7 +43,7 @@ module.exports = {
               js: './src/overlay/renderer.js',
               name: 'overlay_window',
               preload: {
-                js: './src/preload.js',
+                js: './src/overlay/preload.js',
               },
             }
           ],

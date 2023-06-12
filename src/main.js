@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain } = require('electron');
+const { app, BrowserWindow, ipcMain, MessageChannelMain} = require('electron');
 const path = require('path');
 
 const cors = require('cors');
@@ -27,32 +27,70 @@ const createWindow = () => {
 
   // Open the DevTools.
   mainWindow.webContents.openDevTools();
+
+  return mainWindow;
 };
 
 const createOverlayWindow = () => {
+
+  const DEBUG = true
   const overlayWindow = new BrowserWindow({
     width: 900,
     height: 400,
     maxWidth: 1920, minWidth: 100,
     maxWidth: 1080, minWidth: 200,
-    frame: false,
-    autoHideMenubar: true,
+    frame: DEBUG,
+    autoHideMenubar: !DEBUG,
     webPreferences: {
       preload: OVERLAY_WINDOW_PRELOAD_WEBPACK_ENTRY,
       nodeIntegration: false,
     },
     transparent: true,
-    alwaysOnTop: true,
+    alwaysOnTop: DEBUG,
     });
-  overlayWindow.setIgnoreMouseEvents(true);
+  if (DEBUG) {
+    overlayWindow.webContents.openDevTools()
+  } else {
+    overlayWindow.setIgnoreMouseEvents(true);
+  }
+
   overlayWindow.loadURL(OVERLAY_WINDOW_WEBPACK_ENTRY);
+  return overlayWindow;
 };
 
+const createInitialWindows = () => {
+  console.log('test')
+  const mainWindow = createWindow();
+  const overlayWindow = createOverlayWindow();
+  const { port1, port2 } = new MessageChannelMain()
+
+  // mainWindow.once('ready-to-show', () => {
+  //   console.log('posting')
+  //   mainWindow.webContents.postMessage('port', null, [port1])
+  // })
+
+  mainWindow.once('ready-to-show', () => {
+    mainWindow.webContents.postMessage('port', null, [port1])
+  })
+
+  port1.postMessage('postmessage')
+
+  overlayWindow.once('ready-to-show', () => {
+    overlayWindow.webContents.postMessage('port', null, [port2])
+  })
+
+  port1.start();
+  port2.start();
+
+}
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
-app.on('ready', createWindow);
-app.on('ready', createOverlayWindow);
+
+app.on('ready', createInitialWindows);
+
+
+
 
 // Quit when all windows are closed, except on macOS. There, it's common
 // for applications and their menu bar to stay active until the user quits
@@ -101,3 +139,6 @@ ipcMain.handle("getVideoStream", (e, source) => {
   console.log(e);
   console.log(source);
 });
+
+
+

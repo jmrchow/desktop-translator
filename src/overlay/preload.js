@@ -3,15 +3,11 @@
 const { ipcRenderer, contextBridge } = require("electron");
 
 contextBridge.exposeInMainWorld(
-  'init',
+  'initOverlay',
   {
-    getInputSources: () => ipcRenderer.invoke("getInputSources"),
-    getVideoStream: (source) => ipcRenderer.invoke("getVideoStream", source),
     signalMessagePort : () => promiseMessagePortResolve()
   }
 )
-
-
 // We need to wait until the main world is ready to receive the message before
 // sending the port. We create this promise in the preload so it's guaranteed
 // to register the onload listener before the load event is fired.
@@ -38,5 +34,3 @@ ipcRenderer.on('port', async (event) => {
   // world to the main world.
   window.postMessage('port', '*', event.ports)
 })
-
-

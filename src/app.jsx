@@ -2,14 +2,35 @@ import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import Dropdown from 'react-bootstrap/Dropdown';
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 
 const MainPage = () => {
+
+  let messagePortRef = useRef(null)
+
+
+
+  useEffect(() => {
+
+    window.addEventListener("message", (event) => {
+      // event.source === window means the message is coming from the preload script, as opposed to from an <iframe> or other source.
+      if (event.source === window && event.data === 'port') {
+        const [port] = event.ports;
+        messagePortRef.current = port
+        port.onmessage = (event) => {
+          console.log('over -> app: ', event.data);
+        }
+      }
+    })
+    window.init.signalMessagePort();
+  }, []);
+
 
   const host = "http://127.0.0.1"
   const port = ":8080"
   let [inputSources, setInputSources] = useState([]);
   let [selectedSource, setSelectedSource] = useState({ name: "", id: "" });
+
 
   let videoRef = useRef(null);
   const rtcPeerConnection = useRef(new RTCPeerConnection({
@@ -79,9 +100,6 @@ const MainPage = () => {
     });
   }
 
-  let mediaRecorder = useRef(null);
-  const recordedChunks = useRef([]);
-
 
   let createPeerConnection = async (stream) => {
     // register some listeners to help debugging
@@ -108,13 +126,14 @@ const MainPage = () => {
       };
       dc.onopen = function () {
         console.log("Opened DC")
-        let dcInterval = setInterval(function () {
-          var message = 'ping';
-          dc.send(message);
-        }, 1000);
+        // let dcInterval = setInterval(function () {
+        //   var message = 'ping';
+        //   dc.send(message);
+        // }, 1000);
       };
       dc.onmessage = function (evt) {
         console.log(evt.data)
+        messagePortRef.current.postMessage(evt.data)
       };
       dc.current = dc
     }
@@ -133,10 +152,10 @@ const MainPage = () => {
           mandatory: {
             chromeMediaSource: 'desktop',
             chromeMediaSourceId: source.id,
-            minWidth: 1280,
-            maxWidth: 1280,
-            minHeight: 720,
-            maxHeight: 720,
+            minWidth: 1920,
+            maxWidth: 1920,
+            minHeight: 1080,
+            maxHeight: 1080,
           }
         }
       };
@@ -191,9 +210,9 @@ const MainPage = () => {
     });
   }
   let startVideo = () => {
-    console.log(rtcPeerConnection.current.localDescription)
-    console.log((rtcPeerConnection.current.remoteDescription))
-
+    // console.log(rtcPeerConnection.current.localDescription)
+    // console.log((rtcPeerConnection.current.remoteDescription))
+    messagePortRef.current.postMessage('some text')
 
   }
 

@@ -13,7 +13,8 @@ from aiortc.contrib.media import MediaRelay, MediaBlackhole, MediaRecorder, Medi
 from av import VideoFrame
 from threading import Timer
 
-import ocr
+import ocr as ocr
+import translate as translator
 
 ROOT = os.path.dirname(__file__)
 
@@ -39,8 +40,13 @@ class VideoTransformTrack(MediaStreamTrack):
         img = frame.to_image()
         # Do some processing/transforms/etc
         extractedWords = ocr.extractWords(ocr.preprocess(img))
+        translatedWords = []
+        for word, conf, box in extractedWords:
+            if word:
+                translatedText = translator.translate(word)
+                translatedWords.append((translatedText, conf, box))
         if self.channel:
-            self.channel.send(json.dumps(extractedWords))
+            self.channel.send(json.dumps(translatedWords))
         return frame
         # can also return coordinates with translation here
 
