@@ -6,7 +6,9 @@ import { useState, useRef, useEffect } from 'react';
 
 const DetectedText = (props) => {
 
-  const { originalText = '', translatedText = '', showOriginal = false, ...restProps } = props
+  const { originalText = '', translatedText = '', showOriginal = false, confidence, box, ...restProps } = props
+
+
 
 
   return (
@@ -28,7 +30,11 @@ const OverlayPage = () => {
         const [port] = event.ports;
         //messagePortRef.current = port
         port.onmessage = (event) => {
+
           console.log('app -> over: ', event.data);
+          setTranslationTexts(JSON.parse(event.data))
+
+
         }
       }
     })
@@ -38,21 +44,20 @@ const OverlayPage = () => {
   }, []);
 
 
-  let translationText1 = {
-    originalText: "bonjour",
-    translatedText: "hello",
-  }
 
-  let translationText2 = {
-    originalText: "au revoir",
-    translatedText: "goodbye",
-  }
-  let [translationTexts, setTranslationTexts] = useState([translationText1, translationText2]);
+  let translationText1 = "bonjour"
+
+  let translationText2 = "hi"
+  let [translationTexts, setTranslationTexts] = useState([[translationText1, translationText2], [translationText1, translationText2]]);
+
+  useEffect(() => {
+    console.log(translationTexts)
+  }, [translationTexts])
 
   return (
     <div>
-      {translationTexts.map((text) => (
-        <DetectedText originalText={text.originalText} translatedText={text.translatedText}>
+      {translationTexts.map(([translatedText, originalText, confidence, box, ...others]) => (
+        <DetectedText originalText={originalText} translatedText={translatedText} confidence={confidence} box={box}>
         </DetectedText>
       ))}
     </div>

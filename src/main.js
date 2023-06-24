@@ -1,10 +1,6 @@
 const { app, BrowserWindow, ipcMain, MessageChannelMain} = require('electron');
 const path = require('path');
 
-const cors = require('cors');
-const express = require('express');
-const expressApp = express();
-
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require('electron-squirrel-startup')) {
   app.quit();
@@ -18,7 +14,7 @@ const createWindow = () => {
     height: 600,
     webPreferences: {
       preload: MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY,
-      nodeIntegration: false,
+      nodeIntegration: true,
     },
   });
 
@@ -33,7 +29,7 @@ const createWindow = () => {
 
 const createOverlayWindow = () => {
 
-  const DEBUG = true
+  const DEBUG = false
   const overlayWindow = new BrowserWindow({
     width: 900,
     height: 400,
@@ -46,7 +42,7 @@ const createOverlayWindow = () => {
       nodeIntegration: false,
     },
     transparent: true,
-    alwaysOnTop: DEBUG,
+    alwaysOnTop: !DEBUG,
     });
   if (DEBUG) {
     overlayWindow.webContents.openDevTools()
@@ -112,20 +108,37 @@ app.on('activate', () => {
 // In this file you can include the rest of your app's specific main process
 // code. You can also put them in separate files and import them here.
 
+
 const { desktopCapturer, remote } = require('electron');
+
+const express = require('express');
+const cors = require('cors')
+
+app.on('ready', () => {
+  //const nwm = require('electron-node-window-manager');
+  const {windowManager} = require('electron-node-window-manager')
+  const test = require("socket.io");
+})
+
+
+// module.windowManager.requestAccessibility();
+
+// const windows = module.windowManager.getActiveWindows();
+// console.log(windows)
 
 async function getVideoSources() {
   const inputSources = await desktopCapturer.getSources({
-    types: ['window', 'screen']
+    types: ['screen','window']
   });
 
   const inputSourcesList = inputSources.map(source => {
     return {
       name: source.name,
-      id: source.id
+      id: source.id,
+      display_id: source.display_id
     };
   })
-
+  console.log(inputSourcesList)
   return inputSourcesList;
 
 }

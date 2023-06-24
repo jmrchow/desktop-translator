@@ -44,7 +44,7 @@ class VideoTransformTrack(MediaStreamTrack):
         for word, conf, box in extractedWords:
             if word:
                 translatedText = translator.translate(word)
-                translatedWords.append((translatedText, conf, box))
+                translatedWords.append((translatedText, word, conf, box))
         if self.channel:
             self.channel.send(json.dumps(translatedWords))
         return frame

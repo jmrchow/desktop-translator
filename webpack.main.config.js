@@ -1,3 +1,6 @@
+
+const relocateLoader = require('@vercel/webpack-asset-relocator-loader');
+
 module.exports = {
   /**
    * This is the main entry point for your application, it's the first file
